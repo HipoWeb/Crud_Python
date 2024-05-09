@@ -1,6 +1,8 @@
 from flask import Flask
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect,url_for
 from flaskext.mysql import MySQL
+from flask import send_from_directory
+
 from datetime import datetime
 import os
 
@@ -16,6 +18,11 @@ mysql = MySQL(app)
 
 CARPETA=os.path.join('uploads')
 app.config['CARPETA']=CARPETA
+
+@app.route('/uploads/<nombreFoto>')
+def uploads(nombreFoto):
+    return send_from_directory(app.config['CARPETA'],nombreFoto)
+    pass
 
 
 
@@ -34,6 +41,10 @@ def index():
 def destroy(id):
     conn= mysql.connect()
     cursor=conn.cursor()
+
+    cursor.execute("SELECT foto FROM empleados WHERE id= %s", id)
+    fila=cursor.fetchall()
+    os.remove(os.path.join(app.config['CARPETA'],fila[0][0]))
     
     cursor.execute("DELETE FROM EMPLEADOS WHERE id=%s",(id))
     conn.commit()
@@ -104,7 +115,7 @@ def storage():
     cursor=conn.cursor()
     cursor.execute(sql, datos)
     conn.commit() 
-    return render_template('empleados/index.html')
+    return redirect('/')
 
     
 
